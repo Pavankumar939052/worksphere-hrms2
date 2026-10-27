@@ -5,6 +5,10 @@ from app.core.config import settings
 from app.database import Base, engine
 import app.models
 
+from app.routers import analytics
+from app.routers import shifts
+from app.routers import documents
+from app.routers import performance_reviews
 from app.routers import (
     leave_policies,
     auth,
@@ -36,6 +40,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(analytics.router)
+app.include_router(shifts.router)
+app.include_router(documents.router)
+app.include_router(performance_reviews.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(employees.router)

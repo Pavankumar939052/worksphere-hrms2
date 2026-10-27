@@ -1,5 +1,10 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from sqlalchemy import and_
+from app.models.user import UserRole
+from app.models.attendance import Attendance, AttendanceStatus
+from app.models.performance_review import PerformanceReview
 
 from app.core.dependencies import get_current_user
 from app.core.permissions import require_roles
@@ -53,7 +58,7 @@ def list_employees(
     return db.query(Employee).offset(skip).limit(limit).all()
 
 
-@router.get("/{employee_id}", response_model=EmployeeResponse)
+@router.get("/{employee_id:int}", response_model=EmployeeResponse)
 def get_employee(
     employee_id: int,
     db: Session = Depends(get_db),
@@ -108,3 +113,81 @@ def delete_employee(
     db.delete(employee)
     db.commit()
     return None
+
+
+@router.get("/search", response_model=list[EmployeeResponse])
+def search_employees(
+    name: str | None = Query(default=None, min_length=1, max_length=150),
+    department: str | None = Query(default=None, min_length=1, max_length=100),
+    role: UserRole | None = Query(default=None),
+    employee_status: str | None = Query(default=None, alias="status", pattern="^(ACTIVE|INACTIVE)$"),
+    attendance_status: AttendanceStatus | None = Query(default=None),
+    performance_rating: int | None = Query(default=None, ge=1, le=5),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.HR, UserRole.ADMIN)),
+):
+    query = db.query(Employee).join(User, Employee.user_id == User.id)
+
+    if name:
+        query = query.filter(Employee.full_name.ilike(f"%{name.strip()}%"))
+
+    if department:
+        query = query.filter(Employee.department.ilike(f"%{department.strip()}%"))
+
+    if role:
+        query = query.filter(User.role == role)
+
+    if employee_status:
+        query = query.filter(Employee.status == employee_status)
+
+    if attendance_status:
+        latest_attendance = (
+            db.query(
+                Attendance.employee_id,
+                func.max(Attendance.date).label("latest_date"),
+            )
+            .group_by(Attendance.employee_id)
+            .subquery()
+        )
+        query = (
+            query.join(
+                latest_attendance,
+                latest_attendance.c.employee_id == Employee.id,
+            )
+            .join(
+                Attendance,
+                and_(
+                    Attendance.employee_id == latest_attendance.c.employee_id,
+                    Attendance.date == latest_attendance.c.latest_date,
+                ),
+            )
+            .filter(Attendance.status == attendance_status)
+        )
+
+    if performance_rating is not None:
+        latest_reviews = (
+            db.query(
+                PerformanceReview.employee_id,
+                func.max(PerformanceReview.created_at).label("latest_created_at"),
+            )
+            .filter(PerformanceReview.status == "PUBLISHED")
+            .group_by(PerformanceReview.employee_id)
+            .subquery()
+        )
+        query = (
+            query.join(
+                latest_reviews,
+                latest_reviews.c.employee_id == Employee.id,
+            )
+            .join(
+                PerformanceReview,
+                and_(
+                    PerformanceReview.employee_id == latest_reviews.c.employee_id,
+                    PerformanceReview.created_at == latest_reviews.c.latest_created_at,
+                    PerformanceReview.status == "PUBLISHED",
+                ),
+            )
+            .filter(PerformanceReview.rating == performance_rating)
+        )
+
+    return query.order_by(Employee.full_name.asc()).all()

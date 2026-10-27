@@ -1,4 +1,4 @@
-﻿from datetime import date, datetime
+from datetime import date, datetime
 from enum import Enum
 
 from sqlalchemy import (
@@ -54,6 +54,9 @@ class Attendance(Base):
         nullable=False,
     )
     is_late: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+    is_early_checkout: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
     overtime_hours: Mapped[float] = mapped_column(

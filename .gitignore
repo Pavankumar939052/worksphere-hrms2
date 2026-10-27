@@ -33,3 +33,16 @@ npm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Temporary project backups
+*.module*-backup
+*.backup
+
+# Test artifacts
+backend/test-document.pdf
+
+# Python packaging and coverage
+.coverage
+htmlcov/
+build/
+*.egg-info/

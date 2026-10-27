@@ -1,4 +1,4 @@
-﻿from datetime import date, datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -22,6 +22,7 @@ class AttendanceResponse(BaseModel):
     status: AttendanceStatus
     working_hours: float | None
     is_late: bool
+    is_early_checkout: bool
     overtime_hours: float
 
     model_config = ConfigDict(from_attributes=True)

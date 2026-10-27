@@ -1,4 +1,4 @@
-﻿import { NavLink } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   Users,
@@ -9,6 +9,9 @@ import {
   Bell,
   BriefcaseBusiness,
   ShieldCheck,
+  FileText,
+  Award,
+  ChartNoAxesCombined,
 } from 'lucide-react'
 
 const menuItems = [
@@ -21,6 +24,9 @@ const menuItems = [
   { label: 'Payroll Management', path: '/payroll-management', icon: Wallet },
   { label: 'Notifications', path: '/notifications', icon: Bell },
   { label: 'User Management', path: '/users', icon: ShieldCheck },
+  { label: 'Documents', path: '/documents', icon: FileText },
+  { label: 'Performance Reviews', path: '/performance-reviews', icon: Award },
+  { label: 'Analytics & Reports', path: '/analytics', icon: ChartNoAxesCombined },
 ]
 
 export default function Sidebar() {

@@ -1,6 +1,7 @@
-﻿from datetime import date
+from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user
@@ -39,6 +40,18 @@ def apply_for_leave(
             detail="End date cannot be earlier than start date",
         )
 
+    overlapping_leave = db.query(Leave).filter(
+        Leave.employee_id == employee.id,
+        Leave.status.in_([LeaveStatus.PENDING, LeaveStatus.APPROVED]),
+        Leave.start_date <= leave_data.end_date,
+        Leave.end_date >= leave_data.start_date,
+    ).first()
+
+    if overlapping_leave:
+        raise HTTPException(
+            status_code=409,
+            detail="This request overlaps an existing pending or approved leave.",
+        )
     leave_days = (leave_data.end_date - leave_data.start_date).days + 1
 
     balance = db.query(LeaveBalance).filter(
@@ -121,6 +134,78 @@ def list_leave_requests(
     )
 
 
+
+@router.get("/calendar", response_model=list[LeaveResponse])
+def leave_calendar(
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.HR, UserRole.ADMIN)),
+):
+    if end_date < start_date:
+        raise HTTPException(
+            status_code=422,
+            detail="End date cannot be earlier than start date",
+        )
+
+    return (
+        db.query(Leave)
+        .filter(
+            Leave.status == LeaveStatus.APPROVED,
+            Leave.start_date <= end_date,
+            Leave.end_date >= start_date,
+        )
+        .order_by(Leave.start_date.asc())
+        .all()
+    )
+
+@router.get("/team-availability")
+def team_availability(
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    department: str | None = Query(default=None, min_length=1, max_length=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.HR, UserRole.ADMIN)),
+):
+    if end_date < start_date:
+        raise HTTPException(
+            status_code=422,
+            detail="End date cannot be earlier than start date",
+        )
+
+    query = (
+        db.query(Leave, Employee)
+        .join(Employee, Leave.employee_id == Employee.id)
+        .filter(
+            Leave.status == LeaveStatus.APPROVED,
+            Leave.start_date <= end_date,
+            Leave.end_date >= start_date,
+            Employee.status == "ACTIVE",
+        )
+    )
+
+    if department:
+        query = query.filter(Employee.department == department)
+
+    results = query.order_by(
+        Employee.department.asc(),
+        Employee.full_name.asc(),
+        Leave.start_date.asc(),
+    ).all()
+
+    return [
+        {
+            "employee_id": employee.id,
+            "employee_name": employee.full_name,
+            "department": employee.department,
+            "leave_id": leave.id,
+            "leave_type": leave.leave_type.value,
+            "start_date": leave.start_date,
+            "end_date": leave.end_date,
+            "status": leave.status.value,
+        }
+        for leave, employee in results
+    ]
 @router.patch("/{leave_id}/review", response_model=LeaveResponse)
 def review_leave_request(
     leave_id: int,

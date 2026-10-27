@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -11,6 +11,9 @@ import Payroll from './pages/Payroll'
 import PayrollManagement from './pages/PayrollManagement'
 import Notifications from './pages/Notifications'
 import UserManagement from './pages/UserManagement'
+import Documents from './pages/Documents'
+import PerformanceReviews from './pages/PerformanceReviews'
+import Analytics from './pages/Analytics'
 import './index.css'
 
 function ProtectedRoute({ children }) {
@@ -34,6 +37,9 @@ export default function App() {
         <Route path="/payroll-management" element={<ProtectedRoute><PayrollManagement /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+        <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+        <Route path="/performance-reviews" element={<ProtectedRoute><PerformanceReviews /></ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
