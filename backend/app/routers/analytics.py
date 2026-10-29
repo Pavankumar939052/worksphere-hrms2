@@ -282,7 +282,7 @@ def export_analytics_csv(
         for employee in db.query(Employee).all():
             writer.writerow([
                 employee.id,
-                getattr(employee, "name", ""),
+                getattr(employee, "full_name", ""),
                 getattr(employee.status, "value", employee.status),
             ])
 
@@ -363,5 +363,156 @@ def export_analytics_csv(
         media_type="text/csv; charset=utf-8",
         headers={
             "Content-Disposition": f'attachment; filename="worksphere_{report_type}_report.csv"'
+        },
+    )
+
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+
+
+@router.get("/export-pdf/{report_type}")
+def export_analytics_pdf(
+    report_type: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_roles(UserRole.HR, UserRole.ADMIN)
+    ),
+):
+    report_data = {
+        "employees": (
+            "Employees Report",
+            ["Employee ID", "Name", "Status"],
+            [
+                [
+                    employee.id,
+                    employee.full_name,
+                    getattr(employee.status, "value", employee.status),
+                ]
+                for employee in db.query(Employee).all()
+            ],
+        ),
+        "attendance": (
+            "Attendance Report",
+            ["ID", "Employee ID", "Date", "Status", "Check In", "Check Out", "Overtime"],
+            [
+                [
+                    record.id,
+                    record.employee_id,
+                    str(record.date),
+                    getattr(record.status, "value", record.status),
+                    str(record.check_in or ""),
+                    str(record.check_out or ""),
+                    str(getattr(record, "overtime_hours", 0)),
+                ]
+                for record in db.query(Attendance).all()
+            ],
+        ),
+        "leaves": (
+            "Leave Report",
+            ["Leave ID", "Employee ID", "Type", "Start Date", "End Date", "Status"],
+            [
+                [
+                    record.id,
+                    record.employee_id,
+                    str(getattr(record.leave_type, "value", getattr(record, "type", ""))),
+                    str(record.start_date),
+                    str(record.end_date),
+                    getattr(record.status, "value", record.status),
+                ]
+                for record in db.query(Leave).all()
+            ],
+        ),
+        "payroll": (
+            "Payroll Report",
+            ["Payroll ID", "Employee ID", "Month", "Basic Salary", "Deductions", "Bonus", "Net Salary"],
+            [
+                [
+                    record.id,
+                    record.employee_id,
+                    str(record.month),
+                    str(record.basic_salary),
+                    str(record.deductions),
+                    str(record.bonus),
+                    str(record.net_salary),
+                ]
+                for record in db.query(Payroll).all()
+            ],
+        ),
+        "performance": (
+            "Performance Reviews Report",
+            ["Review ID", "Employee ID", "Reviewer ID", "Period Start", "Period End", "Rating", "Status"],
+            [
+                [
+                    record.id,
+                    record.employee_id,
+                    record.reviewer_id,
+                    str(record.review_period_start),
+                    str(record.review_period_end),
+                    str(record.rating),
+                    str(record.status),
+                ]
+                for record in db.query(PerformanceReview).filter(
+                    PerformanceReview.status == "PUBLISHED"
+                ).all()
+            ],
+        ),
+    }
+
+    if report_type not in report_data:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid report type. Use employees, attendance, leaves, payroll, or performance.",
+        )
+
+    title, headers, rows = report_data[report_type]
+    buffer = io.BytesIO()
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        rightMargin=12 * mm,
+        leftMargin=12 * mm,
+        topMargin=15 * mm,
+        bottomMargin=15 * mm,
+    )
+
+    styles = getSampleStyleSheet()
+    content = [
+        Paragraph(title, styles["Title"]),
+        Spacer(1, 8 * mm),
+        Paragraph(
+            f"Generated on {date.today().isoformat()} | Total records: {len(rows)}",
+            styles["Normal"],
+        ),
+        Spacer(1, 5 * mm),
+    ]
+
+    table_data = [headers] + (rows or [["No records found"] + [""] * (len(headers) - 1)])
+    table = Table(table_data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#EAF0F6")]),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ]))
+    content.append(table)
+    document.build(content)
+    buffer.seek(0)
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="worksphere_{report_type}_report.pdf"'
         },
     )

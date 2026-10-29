@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models.notification import Notification
 from app.models.user import User, UserRole
 from app.schemas.notification import NotificationCreate, NotificationResponse
+from app.services.email_service import send_email
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
@@ -29,6 +30,15 @@ def create_notification(
     db.add(notification)
     db.commit()
     db.refresh(notification)
+
+    # Email is optional; in-app notification remains available if email fails.
+    if recipient.email:
+        send_email(
+            to_email=recipient.email,
+            subject=notification_data.title,
+            body=notification_data.message,
+        )
+
     return notification
 
 

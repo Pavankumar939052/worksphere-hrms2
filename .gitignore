@@ -46,3 +46,6 @@ backend/test-document.pdf
 htmlcov/
 build/
 *.egg-info/
+
+# One-off source backups
+*.health-fix-backup

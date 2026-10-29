@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -14,6 +14,12 @@ import UserManagement from './pages/UserManagement'
 import Documents from './pages/Documents'
 import PerformanceReviews from './pages/PerformanceReviews'
 import Analytics from './pages/Analytics'
+import Onboarding from './pages/Onboarding'
+import Resignations from './pages/Resignations'
+import Announcements from './pages/Announcements'
+import Tasks from './pages/Tasks'
+import Feedback from './pages/Feedback'
+import ProfileSettings from './pages/ProfileSettings'
 import './index.css'
 
 function ProtectedRoute({ children }) {
@@ -33,6 +39,10 @@ export default function App() {
         <Route path="/attendance" element={<ProtectedRoute><Attendance /></ProtectedRoute>} />
         <Route path="/leaves" element={<ProtectedRoute><Leaves /></ProtectedRoute>} />
         <Route path="/leave-approvals" element={<ProtectedRoute><LeaveApprovals /></ProtectedRoute>} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+        <Route path="/resignations" element={<ProtectedRoute><Resignations /></ProtectedRoute>} />
+        <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
+        <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
         <Route path="/payroll" element={<ProtectedRoute><Payroll /></ProtectedRoute>} />
         <Route path="/payroll-management" element={<ProtectedRoute><PayrollManagement /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
@@ -40,9 +50,17 @@ export default function App() {
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/performance-reviews" element={<ProtectedRoute><PerformanceReviews /></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+        <Route path="/feedback" element={<ProtectedRoute><Feedback /></ProtectedRoute>} />
+        <Route path="/profile-settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
     </BrowserRouter>
   )
 }
+
+
+
+
+
+

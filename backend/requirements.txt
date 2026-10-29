@@ -7,3 +7,4 @@ pwdlib[argon2]
 email-validator
 pytest
 httpx
+reportlab>=4.0

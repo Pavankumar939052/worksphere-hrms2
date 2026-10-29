@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import Sidebar from '../components/Sidebar'
@@ -9,7 +9,7 @@ function StatCard({ label, value, detail }) {
     <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <div className="mb-5 h-1.5 w-14 rounded-full bg-blue-500" />
       <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-slate-900">{value ?? '—'}</p>
+      <p className="mt-2 text-3xl font-bold text-slate-900">{value ?? 'â€”'}</p>
       {detail && <p className="mt-2 text-sm text-slate-500">{detail}</p>}
     </section>
   )
@@ -103,6 +103,30 @@ export default function Analytics() {
         error.response?.status === 403
           ? 'CSV exports require an HR or Admin account.'
           : 'Unable to download CSV report.'
+      )
+    }
+  }
+  async function downloadPdf(reportType) {
+    try {
+      const response = await api.get(`/analytics/export-pdf/${reportType}`, {
+        responseType: 'blob',
+      })
+
+      const url = window.URL.createObjectURL(response.data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `worksphere_${reportType}_report.pdf`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+
+      toast.success(`${reportType} PDF downloaded successfully.`)
+    } catch (error) {
+      toast.error(
+        error.response?.status === 403
+          ? 'PDF exports require an HR or Admin account.'
+          : 'Unable to download PDF report.'
       )
     }
   }
@@ -274,6 +298,29 @@ export default function Analytics() {
                   ))}
                 </div>
               </ReportSection>
+              <ReportSection title="Downloadable PDF reports">
+                <p className="mb-4 text-sm text-slate-600">
+                  Download HR reports as PDF documents for sharing and printing.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    ['employees', 'Employees'],
+                    ['attendance', 'Attendance'],
+                    ['leaves', 'Leave records'],
+                    ['payroll', 'Payroll'],
+                    ['performance', 'Performance reviews'],
+                  ].map(([type, label]) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => downloadPdf(type)}
+                      className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                    >
+                      Download {label} PDF
+                    </button>
+                  ))}
+                </div>
+              </ReportSection>
               <ReportSection title="Attendance report">
                 <form onSubmit={loadAttendanceReport} className="flex flex-wrap items-end gap-4">
                   <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
@@ -309,13 +356,13 @@ export default function Analytics() {
                 {attendance && (
                   <div className="mt-6">
                     <p className="mb-3 text-sm text-slate-500">
-                      {attendance.start_date} to {attendance.end_date} · {attendance.total_records} records
+                      {attendance.start_date} to {attendance.end_date} Â· {attendance.total_records} records
                     </p>
                     {Object.entries(attendance.by_status || {}).map(([status, details]) => (
                       <ValueRow
                         key={status}
                         label={status}
-                        value={`${details.count} records · ${details.overtime_hours} overtime hours`}
+                        value={`${details.count} records Â· ${details.overtime_hours} overtime hours`}
                       />
                     ))}
                   </div>
@@ -328,3 +375,5 @@ export default function Analytics() {
     </div>
   )
 }
+
+

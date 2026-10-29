@@ -1,17 +1,22 @@
-import { NavLink } from 'react-router-dom'
+﻿import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   Users,
   CalendarCheck,
   CalendarDays,
   ClipboardCheck,
+  ClipboardList,
+  LogOut,
   Wallet,
   Bell,
+  Megaphone,
   BriefcaseBusiness,
   ShieldCheck,
   FileText,
   Award,
   ChartNoAxesCombined,
+  MessageSquare,
+  UserRound,
 } from 'lucide-react'
 
 const menuItems = [
@@ -20,13 +25,19 @@ const menuItems = [
   { label: 'Attendance', path: '/attendance', icon: CalendarCheck },
   { label: 'Leave Management', path: '/leaves', icon: CalendarDays },
   { label: 'Leave Approvals', path: '/leave-approvals', icon: ClipboardCheck },
+  { label: 'Employee Onboarding', path: '/onboarding', icon: ClipboardList },
+  { label: 'Resignation & Exit Management', path: '/resignations', icon: LogOut },
   { label: 'Payroll', path: '/payroll', icon: Wallet },
   { label: 'Payroll Management', path: '/payroll-management', icon: Wallet },
   { label: 'Notifications', path: '/notifications', icon: Bell },
+  { label: 'Internal Announcements', path: '/announcements', icon: Megaphone },
+  { label: 'Task Assignment & Tracking', path: '/tasks', icon: ClipboardList },
   { label: 'User Management', path: '/users', icon: ShieldCheck },
   { label: 'Documents', path: '/documents', icon: FileText },
   { label: 'Performance Reviews', path: '/performance-reviews', icon: Award },
   { label: 'Analytics & Reports', path: '/analytics', icon: ChartNoAxesCombined },
+  { label: 'Employee Feedback', path: '/feedback', icon: MessageSquare },
+  { label: 'Profile & Settings', path: '/profile-settings', icon: UserRound },
 ]
 
 export default function Sidebar() {
@@ -42,7 +53,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-2 px-3 py-6">
+      <nav className="flex-1 space-y-2 overflow-y-auto px-3 py-6">
         {menuItems.map(({ label, path, icon: Icon }) => (
           <NavLink
             key={path}
@@ -67,3 +78,7 @@ export default function Sidebar() {
     </aside>
   )
 }
+
+
+
+

@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
@@ -9,6 +9,9 @@ from app.routers import analytics
 from app.routers import shifts
 from app.routers import documents
 from app.routers import performance_reviews
+from app.routers import onboarding
+from app.routers import resignations
+from app.routers import announcements
 from app.routers import (
     leave_policies,
     auth,
@@ -44,6 +47,9 @@ app.include_router(analytics.router)
 app.include_router(shifts.router)
 app.include_router(documents.router)
 app.include_router(performance_reviews.router)
+app.include_router(onboarding.router)
+app.include_router(resignations.router)
+app.include_router(announcements.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(employees.router)
@@ -69,3 +75,18 @@ def health_check():
         "status": "healthy",
         "application": settings.app_name,
     }
+
+
+from app.routers import tasks
+
+app.include_router(tasks.router)
+
+from app.routers import feedback
+app.include_router(feedback.router)
+
+
+from app.routers import settings as settings_router
+app.include_router(settings_router.router)
+
+
+
